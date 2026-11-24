@@ -24,16 +24,31 @@
 	# What recipients and request senders need, open to anyone with a link:
 	# the page and its static files, downloads, notes, file-request uploads and inboxes.
 	# Everything else (the upload page, creating uploads, notes and requests) needs the password.
-	@open {
-		expression <<CEL
-			path('/api/health', '/api/config', '/assets/*', '/branding/*', '/file/*', '/note/*', '/d/*', '/inbox/*', '/request/*', '/how', '/api/info/*', '/api/exists/*', '/api/password/*', '/api/download/*', '/api/inbox/*', '/auth/*')
-			|| path_regexp('^/api/note/[A-Za-z0-9_-]+(/(view|password))?$') && !method('DELETE')
-			|| path_regexp('^/api/request/[A-Za-z0-9_-]+(/.*)?$') && !path('/api/request/limit')
-			|| method('GET', 'HEAD') && !path('/api/*') && path_regexp('^/[A-Za-z0-9_./-]*\.[A-Za-z0-9]+$')
-		CEL
+	@open path /api/health /api/config /assets/* /branding/* /file/* /note/* /d/* /inbox/* /request/* /how /api/info/* /api/exists/* /api/password/* /api/download/* /api/inbox/* /auth/*
+	@noteapi {
+		path_regexp ^/api/note/[A-Za-z0-9_-]+(/view|/password)?$
+		not method DELETE
+	}
+	@requestapi {
+		path_regexp ^/api/request/[A-Za-z0-9_-]+(/.*)?$
+		not path /api/request/limit
+	}
+	@static {
+		method GET HEAD
+		not path /api/*
+		path_regexp ^/[A-Za-z0-9_./-]*[.][A-Za-z0-9]+$
 	}
 
 	handle @open {
+		import proxy
+	}
+	handle @noteapi {
+		import proxy
+	}
+	handle @requestapi {
+		import proxy
+	}
+	handle @static {
 		import proxy
 	}
 
