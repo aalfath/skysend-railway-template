@@ -4,6 +4,16 @@
 	persist_config off
 }
 
+(proxy) {
+	reverse_proxy 127.0.0.1:3000 {
+		# Railway's edge sets X-Real-IP to the visitor. SkySend takes the last X-Forwarded-For
+		# entry from a trusted proxy (loopback), so hand it exactly that one address.
+		header_up X-Forwarded-For {http.request.header.X-Real-IP}
+		header_up X-Real-IP {http.request.header.X-Real-IP}
+		flush_interval -1
+	}
+}
+
 :{$PORT} {
 	# Railway's health check. Answers without a password.
 	handle /healthz {
@@ -32,15 +42,5 @@
 			{$UPLOAD_USERNAME} {$UPLOAD_PASSWORD_HASH}
 		}
 		import proxy
-	}
-}
-
-(proxy) {
-	reverse_proxy 127.0.0.1:3000 {
-		# Railway's edge sets X-Real-IP to the visitor. SkySend takes the last X-Forwarded-For
-		# entry from a trusted proxy (loopback), so hand it exactly that one address.
-		header_up X-Forwarded-For {http.request.header.X-Real-IP}
-		header_up X-Real-IP {http.request.header.X-Real-IP}
-		flush_interval -1
 	}
 }
